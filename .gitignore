@@ -1,0 +1,90 @@
+# ================================
+# 📂 GENERAL IGNORE RULES
+# ================================
+*.log
+*.pyc
+*.pyo
+__pycache__/
+*.swp
+*.swo
+
+# ================================
+# 📂 DJANGO BACKEND (Django REST Framework)
+# ================================
+
+# SQLite Database & Migrations
+backend/db.sqlite3
+backend/*.sqlite3-journal
+backend/migrations/
+backend/migrations/__pycache__/
+backend/migrations/*.pyc
+
+# Virtual Environment
+backend/venv/
+backend/env/
+backend/.venv
+
+# Django Static & Media Files
+backend/staticfiles/
+backend/media/
+
+# Secret Keys & Configurations
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
+backend/.env.test
+
+# Python Bytecode & Cache
+backend/__pycache__/
+backend/*.pyc
+backend/*.pyo
+
+# Coverage Reports (if using tests)
+backend/coverage/
+backend/htmlcov/
+backend/.pytest_cache
+
+# ================================
+# 📂 REACT FRONTEND (Node.js)
+# ================================
+
+# Node Modules (Dependency Files)
+frontend/node_modules/
+node_modules/
+
+# Build Files
+frontend/build/
+frontend/dist/
+
+# Log & Debug Files
+frontend/npm-debug.log
+frontend/yarn-debug.log
+frontend/yarn-error.log
+
+# React Environment Variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+frontend/.env.test
+
+# Temporary Files
+frontend/.cache
+frontend/.parcel-cache
+
+# ================================
+# 📂 IDE & EDITOR SPECIFIC FILES
+# ================================
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# ================================
+# 📂 DOCKER (If using Docker)
+# ================================
+backend/docker-compose.override.yml
+backend/*.dockerfile
+frontend/docker-compose.override.yml
+frontend/*.dockerfile
