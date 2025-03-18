@@ -144,6 +144,5 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-HERE_API_KEY = os.getenv("HERE_API_KEY")
-UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
-OPENCAGE_API_KEY= os.getenv("OPENCAGE_API_KEY")
+
+API_KEY=os.getenv("GOOGLE_PLACES_API_KEY")

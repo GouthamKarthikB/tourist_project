@@ -28,100 +28,65 @@ class LoginView(generics.GenericAPIView):
             "refresh": str(refresh),
             "user": UserSerializer(user).data
         })
-import requests
-from django.http import JsonResponse
-from django.conf import settings
-import requests
-from django.http import JsonResponse
-from django.conf import settings
 
 import requests
-from django.http import JsonResponse
 from django.conf import settings
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
-def get_city_coordinates(city):  # This should accept only city
-    OPENCAGE_API_KEY = settings.OPENCAGE_API_KEY
-    url = f"https://api.opencagedata.com/geocode/v1/json?q={city},India&key={OPENCAGE_API_KEY}"
+GOOGLE_PLACES_API_KEY = settings.API_KEY
+
+@api_view(['GET'])
+def get_tourist_places(request):
+    place_name = request.GET.get("place_name", "")
+    print(f"Received request for place: {place_name}")
+
+    if not place_name:
+        print("Error: Missing place name")
+        return Response({"error": "Missing place name"}, status=400)
+
+    google_url = (
+        f"https://maps.googleapis.com/maps/api/place/textsearch/json?"
+        f"query={place_name}&key={GOOGLE_PLACES_API_KEY}"
+    )
+
+    print(f"Requesting Google Places API: {google_url}")
 
     try:
-        response = requests.get(url)
-        response.raise_for_status()
+        response = requests.get(google_url)
         data = response.json()
 
-        if data["results"]:
-            lat = data["results"][0]["geometry"]["lat"]
-            lon = data["results"][0]["geometry"]["lng"]
-            return lat, lon
+        print("Google API Raw Response:", data)
+
+        if "error_message" in data:
+            print("Google API Error:", data["error_message"])
+            return Response({"error": data["error_message"]}, status=400)
+
+        if "results" in data:
+            places = []
+            for place in data["results"]:
+                place_info = {
+                    "name": place.get("name", "Unknown Place"),
+                    "address": place.get("formatted_address", "Address Not Available"),
+                    "photo_url": None  # Default None if no photo found
+                }
+
+                # Check if photos exist
+                if "photos" in place and len(place["photos"]) > 0:
+                    photo_reference = place["photos"][0]["photo_reference"]
+                    place_info["photo_url"] = (
+                        f"https://maps.googleapis.com/maps/api/place/photo?"
+                        f"maxwidth=400&photo_reference={photo_reference}&key={GOOGLE_PLACES_API_KEY}"
+                    )
+
+                places.append(place_info)
+
+            print(f"Returning {len(places)} places.")
+            return Response({"places": places})
         else:
-            return None, None
-    except requests.RequestException as e:
-        return None, None
+            print("No places found in API response.")
+            return Response({"error": "No places found"}, status=404)
 
-
-def get_nearby_tourist_places(request):
-    """Fetch tourist places and their images using HERE API"""
-    state = request.GET.get("state")
-    city = request.GET.get("city")
-    limit = request.GET.get("limit", 50)  # Default: 50 places
-
-    if not state or not city:
-        return JsonResponse({"error": "State and City are required"}, status=400)
-
-    # Get city coordinates
-    latitude, longitude = get_city_coordinates( city)
-    if not latitude or not longitude:
-        return JsonResponse({"error": "Invalid state or city"}, status=400)
-
-    HERE_API_KEY = settings.HERE_API_KEY
-    here_url = f"https://discover.search.hereapi.com/v1/discover?at={latitude},{longitude}&limit={limit}&q=attraction&apiKey={HERE_API_KEY}"
-
-    try:
-        here_response = requests.get(here_url)
-        here_response.raise_for_status()
-        here_data = here_response.json()
-    except requests.RequestException as e:
-        print(f"Error fetching tourist places: {e}")
-        return JsonResponse({"error": "Failed to fetch places from HERE API"}, status=500)
-
-    places = []
-    
-    for item in here_data.get("items", []):
-        place_name = item["title"]
-        address = item.get("address", {}).get("label", "Unknown Address")
-        lat = item["position"]["lat"]
-        lon = item["position"]["lng"]
-        place_id = item["id"]  # HERE Place ID
-
-        # Fetch images using HERE API
-        image_urls = fetch_here_place_images(place_id)
-
-        places.append({
-            "name": place_name,
-            "address": address,
-            "latitude": lat,
-            "longitude": lon,
-            "image_urls": image_urls
-        })
-
-    return JsonResponse({"places": places})
-
-
-def fetch_here_place_images(place_id):
-    """Fetch images for a place using HERE API"""
-    HERE_API_KEY = settings.HERE_API_KEY
-    image_url = f"https://browse.search.hereapi.com/v1/browse/{place_id}/photos?apiKey={HERE_API_KEY}"
-
-    try:
-        response = requests.get(image_url)
-        response.raise_for_status()
-        data = response.json()
-
-        if "items" not in data:
-            return []
-
-        image_urls = [img["href"] for img in data["items"]]
-        return image_urls if image_urls else ["https://via.placeholder.com/300"]
-
-    except requests.RequestException as e:
-        print(f"Error fetching images: {e}")
-        return []
+    except Exception as e:
+        print(f"Exception occurred: {str(e)}")
+        return Response({"error": str(e)}, status=500)
