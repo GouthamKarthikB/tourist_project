@@ -29,7 +29,7 @@ backend/staticfiles/
 backend/media/
 
 # Secret Keys & Configurations
-backend/.env
+backend/tourist_backend/.env
 backend/.env.local
 backend/.env.development
 backend/.env.production
