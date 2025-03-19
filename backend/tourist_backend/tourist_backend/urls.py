@@ -26,4 +26,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('users.urls')),
     path('favicon.ico', favicon_view),
+     path('api/chat/', include('chat.urls')),
 ]

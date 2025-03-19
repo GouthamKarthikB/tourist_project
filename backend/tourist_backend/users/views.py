@@ -3,7 +3,11 @@ from rest_framework import generics, permissions
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, RegisterSerializer
+from .serializers import UserSerializer, RegisterSerializer,VisitSerializer
+from .models import Visit
+from rest_framework.permissions import IsAuthenticated
+
+
 import os
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -90,3 +94,19 @@ def get_tourist_places(request):
     except Exception as e:
         print(f"Exception occurred: {str(e)}")
         return Response({"error": str(e)}, status=500)
+
+class VisitCreateView(generics.CreateAPIView):
+    queryset = Visit.objects.all()
+    serializer_class = VisitSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class VisitListView(generics.ListAPIView):
+    serializer_class = VisitSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        place_id = self.kwargs['place_id']
+        return Visit.objects.filter(place_id=place_id)

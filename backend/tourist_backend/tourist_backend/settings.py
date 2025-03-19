@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'users',
+    'channels',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -146,3 +148,13 @@ load_dotenv()
 
 
 API_KEY=os.getenv("GOOGLE_PLACES_API_KEY")
+
+
+ASGI_APPLICATION = 'tourist_backend.asgi.application'
+
+# Redis for WebSocket communication
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis in production
+    },
+}
