@@ -38,6 +38,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
+
 GOOGLE_PLACES_API_KEY = settings.API_KEY
 
 @api_view(['GET'])
@@ -70,6 +71,7 @@ def get_tourist_places(request):
             places = []
             for place in data["results"]:
                 place_info = {
+                    "place_id": place.get("place_id", ""),  # Added place_id
                     "name": place.get("name", "Unknown Place"),
                     "address": place.get("formatted_address", "Address Not Available"),
                     "photo_url": None  # Default None if no photo found
@@ -95,6 +97,7 @@ def get_tourist_places(request):
         print(f"Exception occurred: {str(e)}")
         return Response({"error": str(e)}, status=500)
 
+
 class VisitCreateView(generics.CreateAPIView):
     queryset = Visit.objects.all()
     serializer_class = VisitSerializer
@@ -110,3 +113,24 @@ class VisitListView(generics.ListAPIView):
     def get_queryset(self):
         place_id = self.kwargs['place_id']
         return Visit.objects.filter(place_id=place_id)
+
+def get_place_details(request):
+    place_id = request.GET.get("place_id")
+    if not place_id:
+        return JsonResponse({"error": "Missing place_id"}, status=400)
+
+    url = f"https://maps.googleapis.com/maps/api/place/details/json?place_id={place_id}&key={GOOGLE_PLACES_API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+
+    if "result" not in data:
+        return JsonResponse({"error": "Invalid place_id"}, status=404)
+
+    place = data["result"]
+    return JsonResponse({
+        "name": place.get("name"),
+        "address": place.get("formatted_address"),
+        "image": place.get("photos", [{}])[0].get("photo_reference", ""),
+        "description": place.get("editorial_summary", {}).get("overview", "No description available"),
+        "reviews": [review["text"] for review in place.get("reviews", [])]
+    })

@@ -7,4 +7,5 @@ urlpatterns = [
     path("tourist-places/", get_tourist_places, name="tourist-places"),
     path('visits/', VisitCreateView.as_view(), name='create-visit'),
     path('visits/<str:place_id>/', VisitListView.as_view(), name='list-visitors'),
+    path("api/users/tourist-places/", get_tourist_places, name="get_tourist_places"),
 ]
